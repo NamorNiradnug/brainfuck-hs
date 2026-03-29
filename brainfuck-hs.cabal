@@ -3,13 +3,17 @@ cabal-version:      3.0
 author:             NamorNiradnug
 build-type:         Simple
 category:           Language
-extra-doc-files:    CHANGELOG.md
+description:        Fucking one's brain with the power of Monads.
 license-file:       LICENSE
 license:            MIT
 maintainer:         roma57linux@gmail.com
 name:               brainfuck-hs
 synopsis:           Optimizing brainfuck interpreter
 version:            0.1.0.0
+
+source-repository head
+    type: git
+    location: https://github.com/NamorNiradnug/brainfuck-hs.git
 
 common warnings
     ghc-options: -Wall -Wno-name-shadowing -Wno-incomplete-uni-patterns
