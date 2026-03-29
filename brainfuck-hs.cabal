@@ -41,10 +41,10 @@ library
         Safe,
 
     build-depends:
-        base ^>=4.21.0.0,
-        parsec ^>=3.1.18.0,
-        mtl ^>= 2.3.2,
-        array ^>= 0.5.8,
+        array ^>=0.5.8,
+        base ^>=4.21,
+        parsec ^>=3.1.18,
+        transformers ^>= 0.6.3,
 
     hs-source-dirs: src
 
@@ -61,8 +61,8 @@ executable brainfuck-hs
         Safe,
 
     build-depends:
-        base ^>=4.21.0.0,
-        optparse-applicative ^>= 0.19.0.0,
+        base ^>=4.21,
+        optparse-applicative ^>= 0.19,
         brainfuck-hs
 
     hs-source-dirs:   app
@@ -74,12 +74,27 @@ test-suite brainfuck-hs-test
 
     default-language: Haskell2010
 
+    default-extensions:
+        RecordWildCards
+
     type:             exitcode-stdio-1.0
 
     hs-source-dirs:   test
 
     main-is:          Main.hs
 
+    other-modules:
+        Tests.Compiler,
+        Tests.Executor,
+        Tests.Interpreter,
+        Tests.Parser,
+        Tests.Examples,
+
     build-depends:
-        base ^>=4.21.0.0,
-        brainfuck-hs
+        base ^>=4.21,
+        brainfuck-hs,
+        hspec ^>=2.11.17,
+        tasty ^>=1.5.4,
+        tasty-hspec ^>=1.2.0.4,
+        tasty-hunit ^>=0.10.2,
+        tasty-quickcheck ^>=0.11.1,

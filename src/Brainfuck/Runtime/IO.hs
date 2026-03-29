@@ -1,16 +1,17 @@
+{-# LANGUAGE DeriveFunctor #-}
+
 module Brainfuck.Runtime.IO (runIORuntime) where
 
 import Brainfuck.Runtime
 import qualified Brainfuck.Runtime.STTape as Tape
 import Control.Monad
-import Control.Monad.Reader
 import Control.Monad.ST
+import Control.Monad.Trans.Class
+import Control.Monad.Trans.Reader
 import Data.Char
 
 newtype IORuntime a = IORuntime {runRuntime :: ReaderT (Tape.STTape RealWorld) IO a}
-
-instance Functor IORuntime where
-  fmap f = IORuntime . fmap f . runRuntime
+  deriving (Functor)
 
 instance Applicative IORuntime where
   pure = IORuntime . pure

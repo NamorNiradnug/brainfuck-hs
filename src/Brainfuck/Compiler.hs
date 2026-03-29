@@ -15,12 +15,22 @@ import Brainfuck.Parser (Command, Program)
 import qualified Brainfuck.Parser as Parser
 import Brainfuck.Runtime
 import Brainfuck.Utils.Offset
+import Data.Bifunctor
 import Data.List hiding (singleton)
 import Data.Maybe
 
-data Sequence a = Empty | !a :> !(Sequence a) deriving (Functor, Foldable)
+data Sequence a = Empty | !a :> !(Sequence a)
+  deriving (Show, Eq, Functor, Foldable)
+
+extractIf :: Sequence a -> (a -> Bool) -> Maybe (a, Sequence a)
+extractIf Empty _ = Nothing
+extractIf (x :> xs) f =
+  if f x
+    then Just (x, xs)
+    else fmap (x :>) <$> extractIf xs f
 
 data Update = Update {offset :: !Offset, change :: !CellValue}
+  deriving (Show, Eq)
 
 update :: Sequence Update -> Update -> Sequence Update
 update Empty update = update :> Empty
@@ -30,6 +40,7 @@ update (head@(Update off x) :> tail) upd@(Update off' x') =
     else head :> update tail upd
 
 data FusedCommand = FusedCommand {updates :: !(Sequence Update), shift :: !Offset}
+  deriving (Eq, Show)
 
 noop :: FusedCommand
 noop = FusedCommand Empty offsetZero
@@ -41,10 +52,12 @@ shiftCommand :: FusedCommand -> Offset -> FusedCommand
 shiftCommand FusedCommand {..} offset = FusedCommand {shift = shift |+| offset, ..}
 
 data ExtendedCommand
-  = Loop [ExtendedCommand]
-  | Fused FusedCommand
+  = Loop ![ExtendedCommand]
+  | Fused !FusedCommand
+  | SimpleLoop {inductionStep :: !CellValue, iteration :: !(Sequence Update)}
   | Input
   | Output
+  deriving (Show, Eq)
 
 type CompiledProgram = [ExtendedCommand]
 
@@ -57,9 +70,16 @@ fuse (Fused fused@FusedCommand {..}) = \case
   _ -> Nothing
 fuse _ = const Nothing
 
+simpleLoop :: Sequence Update -> ExtendedCommand
+simpleLoop updates =
+  uncurry SimpleLoop $
+    maybe (0, updates) (first (negate . change)) (extractIf updates ((== offsetZero) . offset))
+
 compileCommand :: Command -> ExtendedCommand
 compileCommand = \case
-  Parser.Loop body -> Loop (compile body)
+  Parser.Loop body -> case compile body of
+    [Fused FusedCommand {shift = MkOffset 0, ..}] -> simpleLoop updates
+    body -> Loop body
   Parser.Increment -> Fused $ updateCommand noop $ Update offsetZero 1
   Parser.Decrement -> Fused $ updateCommand noop $ Update offsetZero (-1)
   Parser.ShiftLeft -> Fused $ shiftCommand noop offsetLeft

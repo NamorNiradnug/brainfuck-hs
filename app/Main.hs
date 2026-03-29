@@ -2,17 +2,26 @@ module Main (main) where
 
 import qualified Brainfuck as BF
 import Control.Exception (throw)
+import Data.Function
 import Options.Applicative
+
+data Command = AST | Interpret | Compile | Execute
 
 data Options = Options
   { source :: FilePath,
-    optimize :: Bool
+    optCommand :: Command
   }
 
 options :: Parser Options
 options = do
   source <- argument str (metavar "FILE")
-  optimize <- switch (short 'O' <> long "optimize" <> help "Enable optimizations")
+  optCommand <-
+    hsubparser
+      ( command "ast" (info (pure AST) (progDesc "Parse and dump the AST"))
+          <> command "run" (info (pure Interpret) (progDesc "Run directly without optimizations"))
+          <> command "compile" (info (pure Compile) (progDesc "Compile and output the optimized representation"))
+          <> command "exec" (info (pure Execute) (progDesc "Compile and run the optimized script"))
+      )
   return Options {..}
 
 main :: IO ()
@@ -23,4 +32,8 @@ main = do
         fullDesc <> progDesc "Brainfuck interpreter"
   code <- readFile source
   let program = either throw id $ BF.parse source code
-  BF.runIORuntime $ (if optimize then BF.execute . BF.compile else BF.interpret) program
+  program & case optCommand of
+    AST -> print
+    Interpret -> BF.runIORuntime . BF.interpret
+    Compile -> print . BF.compile
+    Execute -> BF.runIORuntime . BF.execute . BF.compile
