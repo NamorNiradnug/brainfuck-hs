@@ -1,6 +1,12 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module Brainfuck.Parser where
+module Brainfuck.Parser
+  ( Command (..),
+    Program,
+    parser,
+    Brainfuck.Parser.parse,
+  )
+where
 
 import Data.Functor
 import Data.Functor.Identity

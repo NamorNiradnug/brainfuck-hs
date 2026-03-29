@@ -1,22 +1,17 @@
 module Brainfuck.Runtime
   ( CellValue,
-    Offset (..),
-    negate,
     RuntimeMonad (..),
     loop,
+    inputToTape,
+    outputFromTape,
   )
 where
 
+import Brainfuck.Utils.Offset
 import Control.Monad
-import Prelude hiding (negate, read)
-import qualified Prelude
+import Prelude hiding (read)
 
 type CellValue = Int
-
-newtype Offset = MkOffset {getOffset :: Int}
-
-negate :: Offset -> Offset
-negate = MkOffset . Prelude.negate . getOffset
 
 class (Monad m) => RuntimeMonad m where
   {-# MINIMAL input, output, (shift | shiftLeft, shiftRight), (read | readAt), (modify | modifyAt) #-}
@@ -27,25 +22,31 @@ class (Monad m) => RuntimeMonad m where
     GT -> replicateM_ offset shiftRight
 
   shiftLeft :: m ()
-  shiftLeft = shift (MkOffset (-1))
+  shiftLeft = shift offsetLeft
 
   shiftRight :: m ()
-  shiftRight = shift (MkOffset 1)
+  shiftRight = shift offsetRight
 
   readAt :: Offset -> m CellValue
-  readAt offset = shift offset *> read <* shift (negate offset)
+  readAt offset = shift offset *> read <* shift (neg offset)
 
   read :: m CellValue
-  read = readAt (MkOffset 0)
+  read = readAt offsetZero
 
   modifyAt :: Offset -> (CellValue -> CellValue) -> m ()
-  modifyAt offset f = shift offset >> modify f >> shift (negate offset)
+  modifyAt offset f = shift offset >> modify f >> shift (neg offset)
 
   modify :: (CellValue -> CellValue) -> m ()
-  modify = modifyAt (MkOffset 0)
+  modify = modifyAt offsetZero
 
   input :: m CellValue
   output :: CellValue -> m ()
 
 loop :: (RuntimeMonad m) => m () -> m ()
 loop body = runLoop where runLoop = read >>= flip unless (body >> runLoop) . (== 0)
+
+inputToTape :: (RuntimeMonad m) => m ()
+inputToTape = input >>= modify . const
+
+outputFromTape :: (RuntimeMonad m) => m ()
+outputFromTape = read >>= output

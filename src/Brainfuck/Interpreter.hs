@@ -11,8 +11,8 @@ interpretCommand = \case
   ShiftRight -> shiftRight
   Increment -> modify (+ 1)
   Decrement -> modify (subtract 1)
-  Input -> input >>= modify . const
-  Output -> read >>= output
+  Input -> inputToTape
+  Output -> outputFromTape
 
 interpret :: (RuntimeMonad m) => Program -> m ()
 interpret = mapM_ interpretCommand
