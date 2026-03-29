@@ -1,0 +1,79 @@
+cabal-version:      3.0
+
+author:             NamorNiradnug
+build-type:         Simple
+category:           Language
+extra-doc-files:    CHANGELOG.md
+license-file:       LICENSE
+license:            MIT
+maintainer:         roma57linux@gmail.com
+name:               brainfuck-hs
+synopsis:           Brainfuck optimizing interpreter
+version:            0.1.0.0
+
+common warnings
+    ghc-options: -Wall -Wno-name-shadowing -Wno-incomplete-uni-patterns
+
+library
+    import: warnings
+
+    exposed-modules:
+        Brainfuck,
+        Brainfuck.Compiler,
+        Brainfuck.Executor,
+        Brainfuck.Interpreter,
+        Brainfuck.Parser,
+        Brainfuck.Runtime,
+        Brainfuck.Runtime.IO,
+        Brainfuck.Runtime.Pure,
+
+    other-modules:
+        Brainfuck.Runtime.STTape,
+
+    default-extensions:
+        LambdaCase,
+        Safe,
+
+    build-depends:
+        base ^>=4.21.0.0,
+        parsec ^>=3.1.18.0,
+        mtl ^>= 2.3.2,
+        array ^>= 0.5.8,
+
+    hs-source-dirs: src
+
+    default-language: Haskell2010
+
+executable brainfuck-hs
+    import:           warnings
+
+    main-is:          Main.hs
+
+    default-extensions:
+        ApplicativeDo,
+        RecordWildCards,
+        Safe,
+
+    build-depends:
+        base ^>=4.21.0.0,
+        optparse-applicative ^>= 0.19.0.0,
+        brainfuck-hs
+
+    hs-source-dirs:   app
+
+    default-language: Haskell2010
+
+test-suite brainfuck-hs-test
+    import:           warnings
+
+    default-language: Haskell2010
+
+    type:             exitcode-stdio-1.0
+
+    hs-source-dirs:   test
+
+    main-is:          Main.hs
+
+    build-depends:
+        base ^>=4.21.0.0,
+        brainfuck-hs
